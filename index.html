@@ -1,0 +1,652 @@
+ط<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1,user-scalable=no" name="viewport"/>
+  <title>Food Rain – Telegram Invoice</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    html,body{margin:0;height:100%;background:#000;font-family:'Kalam',cursive;color:#fff;touch-action:none;overflow:hidden}
+    #topBar{position:absolute;top:4px;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;padding:0 12px;z-index:20}
+    #topBar > div:first-child{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+    .lbl{font-size:18px}.val{font-size:20px;margin-left:4px}
+    #withdrawBtn{
+      font-size:14px;padding:6px 14px;border:none;border-radius:6px;
+      background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;
+      box-shadow:3px 3px 6px #222,-3px -3px 6px #444;
+      transition:transform .15s ease;margin-top:4px
+    }
+    #withdrawBtn:active{transform:translateZ(-6px);box-shadow:inset 2px 2px 4px #222,inset -2px -2px 4px #444}
+
+    /* صفحة السحب الجديدة */
+    #withdrawPage{position:fixed;inset:0;background:#111;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 12px 80px;gap:25px;z-index:150}
+    .field-card{background:#1e1e1e;padding:18px 24px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.4);width:90%;max-width:420px}
+    .field-label{font-size:18px;margin-bottom:8px;display:block}
+    .field-input{width:100%;padding:10px 14px;font-size:16px;border:none;border-radius:8px;background:#2a2a2a;color:#fff;box-shadow:inset 2px 2px 4px #111,inset -2px -2px 4px #333;outline:none}
+    .submitBtn{padding:14px 40px;font-size:18px;border:none;border-radius:10px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;box-shadow:6px 6px 12px #222,-6px -6px 12px #444}
+    .submitBtn:active{transform:translateZ(-12px);box-shadow:inset 4px 4px 8px #222,inset -4px -4px 8px #444}
+
+    #userCard{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;z-index:15;transition:opacity .3s ease}
+    #userCard.hidden{opacity:0;pointer-events:none}
+    #userCard img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #666}
+    #userCard #firstName{font-size:17px;color:#fff}
+    #userCard #username{font-size:14px;color:#aaa}
+    #userCard #userId{font-size:12px;color:#888}
+
+    #btnRow{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;align-items:center;gap:12px;z-index:10}
+    .btn3d{padding:8px 18px;font-size:15px;border:none;border-radius:6px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;box-shadow:6px 6px 12px #222,-6px -6px 12px #444}
+    .btn3d:active{transform:translateZ(-12px);box-shadow:inset 4px 4px 8px #222,inset -4px -4px 8px #444}
+
+    #swapPage{position:fixed;inset:0;background:#111;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 12px 80px;gap:25px;z-index:150}
+    #addTaskPage{position:fixed;inset:0;background:#111;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 12px 80px;gap:25px;z-index:150}
+    .users-selector{display:flex;justify-content:space-around;gap:12px;margin-top:10px}
+    .users-btn{flex:1;padding:10px 0;font-size:16px;border:none;border-radius:8px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;box-shadow:4px 4px 8px #111,-4px -4px 8px #333}
+    .users-btn:active{transform:translateZ(-10px);box-shadow:inset 2px 2px 4px #111,inset -2px -2px 4px #333}
+    .users-btn.selected{background:#00ff88;color:#000}
+
+    #noTicketPopup{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:none;justify-content:center;align-items:center}
+    #noTicketPopup>div{background:#1e1e1e;padding:20px 30px;border-radius:12px;text-align:center;box-shadow:0 0 20px #000;color:#fff;font-size:18px}
+
+    #tasksOnly{position:fixed;inset:0;background:#111;display:none;flex-direction:column;align-items:center;padding:40px 12px 80px;gap:20px;z-index:100;overflow-y:auto;touch-action:pan-y}
+    .task-card{display:flex;align-items:center;gap:12px;background:#1e1e1e;padding:14px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.35);width:90%;max-width:400px}
+    .task-card .icon{font-size:28px}.task-card .txt{flex:1;font-size:18px}
+    .btnJoin,.adBtn3d{padding:6px 16px;font-size:15px;border:none;border-radius:6px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;box-shadow:4px 4px 8px #111,-4px -4px 8px #333}
+    .btnJoin:active,.adBtn3d:active{transform:translateZ(-10px);box-shadow:inset 2px 2px 4px #111,inset -2px -2px 4px #333}
+
+    #backBtn{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);padding:8px 24px;font-size:15px;border:none;border-radius:6px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;box-shadow:6px 6px 12px #222,-6px -6px 12px #444;z-index:200;display:none}
+    #backBtn:active{transform:translateX(-50%) translateZ(-12px);box-shadow:inset 4px 4px 8px #222,inset -4px -4px 8px #444}
+
+    .food{position:absolute;font-size:40px;cursor:pointer;user-select:none;animation:fall 3s linear forwards}
+    @keyframes fall{to{transform:translateY(110vh)}}
+    .pop{position:absolute;width:8px;height:8px;background:#ffae00;border-radius:50%;animation:pop .4s ease-out forwards}
+    @keyframes pop{to{transform:scale(20);opacity:0}}
+  </style>
+</head>
+<body>
+
+<div id="topBar">
+  <div>
+    <div><span class="lbl">Time</span><span class="val" id="timer">30</span>s</div>
+    <button id="withdrawBtn">Withdraw</button>
+  </div>
+  <div><span class="lbl">USDT</span><span class="val" id="usdt">0</span></div>
+  <div><span class="lbl">Ticket</span><span class="val" id="ticket">0</span></div>
+  <div><span class="lbl">Score</span><span class="val" id="score">0</span></div>
+</div>
+
+<div id="userCard">
+  <img id="userImg" src="" alt=""/>
+  <div id="firstName"></div>
+  <div id="username"></div>
+  <div id="userId"></div>
+</div>
+
+<div id="btnRow">
+  <button id="tasksBtn" class="btn3d">TASKS</button>
+  <button id="playBtn" class="btn3d">PLAY</button>
+  <button id="addTaskBtn" class="btn3d">ADD+TASK</button>
+  <button id="swapBtn" class="btn3d">💱</button>
+</div>
+
+<div id="withdrawPage" style="display:none">
+  <div class="field-card">
+    <label class="field-label">Binance UID (Numbers only)</label>
+    <input id="binanceInput" class="field-input" placeholder="12345678" type="number"/>
+  </div>
+  <div class="field-card">
+    <label class="field-label">USDT Amount</label>
+    <input id="withdrawAmount" class="field-input" placeholder="Min 0.03" type="number" min="0.03" step="0.01"/>
+  </div>
+  <button id="confirmWithdrawBtn" class="submitBtn">Confirm Withdraw</button>
+</div>
+
+<div id="swapPage" style="display:none">
+  <div class="field-card">
+    <label class="field-label">Swap Score to USDT</label>
+    <input id="swapInput" class="field-input" placeholder="Enter score" type="number" min="200000"/>
+    <div id="usdtPreview">0 USDT</div>
+  </div>
+  <button id="confirmSwapBtn" class="submitBtn">Confirm Swap</button>
+</div>
+
+<div id="addTaskPage" style="display:none">
+  <div class="field-card"><label class="field-label">Task Name</label><input id="taskNameInput" class="field-input" placeholder="e.g. Join Channel" type="text"/></div>
+  <div class="field-card"><label class="field-label">Channel / Bot Link</label><input id="taskLinkInput" class="field-input" placeholder="https://t.me/YourChannel" type="url"/></div>
+  <div class="field-card"><label class="field-label">Required Users</label>
+    <div class="users-selector">
+      <button class="users-btn" data-users="100">100</button>
+      <button class="users-btn" data-users="200">200</button>
+      <button class="users-btn" data-users="500">500</button>
+    </div>
+  </div>
+  <button id="submitTaskBtn" class="submitBtn">Create Task</button>
+</div>
+
+<div id="tasksOnly" style="display:none">
+  <div class="task-card"><span class="icon">📢</span><span class="txt">Join our channel (+10🎟)</span><button class="btnJoin" id="joinBtn">Join</button></div>
+  <div class="task-card"><span class="icon">📺</span><span class="txt">Watch 300 ads (<span id="adsLeft">300</span> left)</span><button class="adBtn3d" id="watchAdBtn">+1🎟</button></div>
+</div>
+
+<div id="noTicketPopup">
+  <div>❌ You don't have enough tickets<br><button onclick="closeNoTicketPopup()" style="margin-top:12px;padding:6px 18px;font-size:16px;border:none;border-radius:8px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;">Close</button></div>
+</div>
+
+<button id="backBtn">Back</button>
+
+<audio id="popSound" preload="auto" volume="100"></audio>
+
+<script>
+  const popSrc="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE";
+  document.getElementById('popSound').src=popSrc;
+
+  const foods=['🍕','🍔','🍟','🌭','🥪','🌮','🌯','🥙','🍣','🍱','🍜','🍝','🍩','🍪','🍰','🧁','🍮','🍡','🍥','🥟'];
+  let timeLeft=30,gameInterval,timerInterval;
+  const timerEl=document.getElementById('timer');
+  const scoreEl=document.getElementById('score');
+  const usdtEl=document.getElementById('usdt');
+  const ticketEl=document.getElementById('ticket');
+  const playBtn=document.getElementById('playBtn');
+  const tasksBtn=document.getElementById('tasksBtn');
+  const addTaskBtn=document.getElementById('addTaskBtn');
+  const swapBtn=document.getElementById('swapBtn');
+  const tasksOnly=document.getElementById('tasksOnly');
+  const backBtn=document.getElementById('backBtn');
+  const joinBtn=document.getElementById('joinBtn');
+  const watchAdBtn=document.getElementById('watchAdBtn');
+  const adsLeftEl=document.getElementById('adsLeft');
+  const addTaskPage=document.getElementById('addTaskPage');
+  const taskNameInput=document.getElementById('taskNameInput');
+  const taskLinkInput=document.getElementById('taskLinkInput');
+  const submitTaskBtn=document.getElementById('submitTaskBtn');
+  const noTicketPopup=document.getElementById('noTicketPopup');
+  const swapPage=document.getElementById('swapPage');
+  const swapInput=document.getElementById('swapInput');
+  const confirmSwapBtn=document.getElementById('confirmSwapBtn');
+  const usdtPreview=document.getElementById('usdtPreview');
+  const userCard=document.getElementById('userCard');
+  
+  // المتغيرات العالمية يتم تعيينها من دالة updateStats
+  let totalScore=0;
+  let ticketLeft=0;
+  let adsLeft=300;
+  let joined=false;
+  let adBlock=false;
+  let selectedUsers=100;
+
+  scoreEl.textContent=totalScore;
+  ticketEl.textContent=ticketLeft;
+
+  /* helper to call single endpoint */
+  function api(body){ 
+    // **هام:** استبدل 'https://index-html-backend-fynu.vercel.app' بعنوان الـ Backend الفعلي الخاص بك
+    const BACKEND_URL = 'https://index-html-backend-fynu.vercel.app'; 
+    
+    return fetch(BACKEND_URL + '/api',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+    }); 
+  }
+
+  /* تحديث الإحصائيات المعروضة في الشريط العلوي */
+  function updateStats(stats) {
+      totalScore = stats.totalScore;
+      ticketLeft = stats.ticketLeft;
+      adsLeft = stats.adsLeft;
+      joined = stats.joined;
+      
+      scoreEl.textContent = totalScore;
+      ticketEl.textContent = ticketLeft;
+      usdtEl.textContent = parseFloat(stats.usdt).toFixed(6); 
+      adsLeftEl.textContent = adsLeft;
+      
+      // تحديث زر الانضمام بناءً على حالة joined
+      if (joined) {
+          joinBtn.textContent = '✅ Done';
+          joinBtn.disabled = true;
+      } else {
+          joinBtn.textContent = 'Join';
+          joinBtn.disabled = false;
+      }
+  }
+
+  /* fill user data and fetch stats from backend */
+  async function fillUserData(){
+      // افتراضات بيانات المستخدم إذا لم يكن WebApp متاحاً (للاختبار)
+      let u = {
+          id: '1', // ID افتراضي للاختبار
+          first_name: 'Demo',
+          username: 'demo_user',
+          photo_url: 'https://i.pravatar.cc/80?u=demo'
+      };
+      
+      if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe.user){
+          u = window.Telegram.WebApp.initDataUnsafe.user;
+      }
+      
+      // عرض بيانات المستخدم الأساسية
+      document.getElementById('userImg').src=u.photo_url||'https://i.pravatar.cc/80?u='+u.id;
+      document.getElementById('firstName').textContent=u.first_name||'';
+      document.getElementById('username').textContent=u.username?'@'+u.username:'No username';
+      document.getElementById('userId').textContent=u.id||'';
+
+      try {
+          // **الآن نقوم بجلب إحصائيات اللعبة من الخادم عبر API**
+          const res = await api({userId: u.id, action: 'getStats'});
+          if (!res.ok) {
+              const errorText = await res.text();
+              throw new Error(`Server returned ${res.status}: ${errorText}`);
+          }
+          
+          const data = await res.json();
+          // تحديث جميع الأرقام باستخدام دالة updateStats
+          updateStats(data);
+          
+      } catch(err) {
+          console.error('❌ Failed to fetch user stats on load:', err);
+          alert('❌ Failed to connect to server or load stats. Please refresh.');
+      }
+  }
+  
+  fillUserData();
+
+  /* users selector */
+  document.querySelectorAll('.users-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.users-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedUsers=parseInt(btn.dataset.users);
+    });
+  });
+  document.querySelector('.users-btn').classList.add('selected');
+
+  /* Withdraw */
+  document.getElementById('withdrawBtn').addEventListener('click',()=>openWithdraw());
+
+  /* actions */
+  playBtn.addEventListener('click',async ()=>{
+      if(ticketLeft<=0){showNoTicketPopup();return;}
+      
+      const userId = document.getElementById('userId').textContent;
+      try {
+          // نرسل ticketLeft-1 لأن الواجهة الأمامية تعرف أن التذكرة ستنقص
+          const res = await api({userId: userId, action: 'play', ticketLeft: ticketLeft - 1});
+          if (!res.ok) {
+              const errData = await res.json().catch(() => ({ error: 'Play request failed' }));
+              throw new Error(errData.error || 'Play request failed');
+          }
+          
+          const data = await res.json();
+          // تحديث التذاكر من رد الخادم
+          updateStats({
+              totalScore: totalScore, 
+              ticketLeft: data.newTicketCount, 
+              usdt: usdtEl.textContent,
+              adsLeft: adsLeft, 
+              joined: joined 
+          });
+          
+          startGame(); // ابدأ اللعبة فقط بعد تأكيد الخصم من الخادم
+      } catch(err) {
+          console.error(err);
+          alert('❌ Failed to start game, please try again. Error: ' + err.message);
+      }
+  });
+
+  tasksBtn.addEventListener('click',()=>{
+    api({userId:document.getElementById('userId').textContent,action:'openTasks'}).catch(console.error);
+    openTasks();
+  });
+
+  addTaskBtn.addEventListener('click',()=>{
+    api({userId:document.getElementById('userId').textContent,action:'openAddTask'}).catch(console.error);
+    openAddTask();
+  });
+
+  swapBtn.addEventListener('click',()=>{
+    api({userId:document.getElementById('userId').textContent,action:'openSwap'}).catch(console.error);
+    openSwap();
+  });
+
+  confirmSwapBtn.addEventListener('click',async ()=>{
+      const amount=parseInt(swapInput.value);
+      const currentScore = parseInt(scoreEl.textContent);
+      const userId = document.getElementById('userId').textContent;
+      
+      if(!amount||amount<=0||amount>currentScore){alert('Invalid or insufficient score');return;}
+      if(amount<200000){alert('Minimum swap is 200,000 score');return;}
+      
+      try {
+          const res = await api({userId: userId, action:'swap', amount: amount});
+          if (!res.ok) {
+              const errData = await res.json().catch(() => ({ error: 'Swap request failed' }));
+              throw new Error(errData.error || 'Swap request failed');
+          }
+          
+          const data = await res.json();
+          // تحديث الإحصائيات من رد الخادم
+          updateStats({
+              totalScore: data.newScore, 
+              ticketLeft: ticketLeft, 
+              usdt: data.newUsdt,
+              adsLeft: adsLeft, 
+              joined: joined 
+          });
+          
+          alert(`✅ Swapped ${amount} score to ${data.newUsdt} USDT`);
+          closeSwap();
+          
+      } catch(err) {
+          console.error('Swap Error:', err);
+          alert('❌ Swap failed: ' + err.message);
+      }
+  });
+
+  swapInput.addEventListener('input',()=>{
+    const score=parseInt(swapInput.value)||0;
+    const usdt=(score*0.01/200000).toFixed(6);
+    usdtPreview.textContent=`${usdt} USDT`;
+  });
+
+  submitTaskBtn.addEventListener('click',()=>{
+    const name=taskNameInput.value.trim();
+    const link=taskLinkInput.value.trim();
+    if(!name||!link){alert('Please fill all fields');return;}
+    const price=Math.floor(selectedUsers/100)*50;
+    createTelegramInvoice(name,link,price);
+  });
+
+  joinBtn.addEventListener('click',async ()=>{
+      if(joined)return;
+      
+      const userId = document.getElementById('userId').textContent;
+      try {
+          const res = await api({userId: userId, action:'joinChannel', ticketLeft: ticketLeft + 10});
+          if (!res.ok) {
+              const errData = await res.json().catch(() => ({ error: 'Join Channel request failed' }));
+              throw new Error(errData.error || 'Join Channel request failed');
+          }
+          
+          const data = await res.json();
+           updateStats({
+              totalScore: totalScore, 
+              ticketLeft: data.tickets, 
+              usdt: usdtEl.textContent,
+              adsLeft: adsLeft, 
+              joined: true
+          });
+          
+      } catch(err) {
+          console.error('Join Channel Error:', err);
+          alert('❌ Failed to join channel: ' + err.message);
+      }
+  });
+
+  watchAdBtn.addEventListener('click',async ()=>{
+      if(adsLeft<=0||adBlock)return;
+      adBlock=true;
+      
+      const userId = document.getElementById('userId').textContent;
+      try {
+           // محاكاة مشاهدة الإعلان
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          const res = await api({userId: userId, action:'watchAd', ticketLeft: ticketLeft + 1, adsLeft: adsLeft - 1});
+          if (!res.ok) {
+              const errData = await res.json().catch(() => ({ error: 'Watch Ad request failed' }));
+              throw new Error(errData.error || 'Watch Ad request failed');
+          }
+          
+          const data = await res.json();
+          updateStats({
+              totalScore: totalScore, 
+              ticketLeft: data.tickets, 
+              usdt: usdtEl.textContent,
+              adsLeft: data.adsLeft, 
+              joined: joined
+          });
+
+          if(data.adsLeft<=0){
+              watchAdBtn.textContent='⏳ 15h wait';watchAdBtn.disabled=true;
+              // هذا التوقيت قد لا يتطابق مع منطق الـ Backend لإعادة التعيين
+              setTimeout(()=>{
+                  // هذا التحديث يجب أن يحدث في الـ Backend أيضاً
+                  adsLeft=300;adsLeftEl.textContent=adsLeft;watchAdBtn.textContent='+1🎟';watchAdBtn.disabled=false;
+              },54000000);
+          }
+          adBlock=false;
+          
+      } catch(err) {
+          console.error('Watch Ad Error:', err);
+          alert('❌ Failed to watch ad: ' + err.message);
+          adBlock=false; 
+      }
+  });
+
+  backBtn.addEventListener('click',()=>{
+    api({userId:document.getElementById('userId').textContent,action:'back'}).catch(console.error);
+    closeTasks();closeAddTask();closeSwap();closeWithdraw();
+  });
+
+  /* Withdraw logic */
+  const withdrawPage=document.getElementById('withdrawPage');
+  const binanceInput=document.getElementById('binanceInput');
+  const withdrawAmount=document.getElementById('withdrawAmount');
+  const confirmWithdrawBtn=document.getElementById('confirmWithdrawBtn');
+
+  function openWithdraw(){
+    api({userId:document.getElementById('userId').textContent,action:'openWithdraw'}).catch(console.error);
+    document.getElementById('topBar').style.display='none';
+    document.getElementById('btnRow').style.display='none';
+    withdrawPage.style.display='flex';
+    backBtn.style.display='block';
+  }
+  
+  function closeWithdraw(){
+    withdrawPage.style.display='none';
+    backBtn.style.display='none';
+    document.getElementById('topBar').style.display='flex';
+    document.getElementById('btnRow').style.display='flex';
+  }
+  
+  confirmWithdrawBtn.addEventListener('click',async ()=>{
+      const binance=binanceInput.value.trim();
+      const amount=parseFloat(withdrawAmount.value);
+      const currentUsdt=parseFloat(usdtEl.textContent);
+      const userId = document.getElementById('userId').textContent;
+      
+      if(!binance){alert('Please enter your Binance UID');return;}
+      if(!amount||amount<0.03||amount>currentUsdt){
+        alert('Minimum withdraw is 0.03 USDT or insufficient balance');
+        return;
+      }
+      
+      try {
+          const res = await api({userId: userId, action: 'withdraw', binance: binance, withdrawAmount: amount});
+          if (!res.ok) {
+               const errData = await res.json().catch(() => ({ error: 'Withdraw request failed' }));
+               throw new Error(errData.error || 'Withdraw request failed');
+          }
+          
+          const data = await res.json();
+          // تحديث رصيد USDT بعد السحب من رد الخادم
+          updateStats({
+              totalScore: totalScore, 
+              ticketLeft: ticketLeft, 
+              usdt: data.remainingUsdt,
+              adsLeft: adsLeft, 
+              joined: joined 
+          });
+          
+          alert('✅ Withdraw request sent! Remaining USDT: ' + data.remainingUsdt);
+          closeWithdraw();
+          
+      } catch(err) {
+          console.error('Withdraw Error:', err);
+          alert('❌ Withdraw failed: ' + err.message);
+      }
+  });
+
+  /* Telegram Invoice */
+  function createTelegramInvoice(name,link,price){
+    if(!window.Telegram||!window.Telegram.WebApp){alert('Telegram WebApp غير متاح');return;}
+    const payload={
+      title:name,
+      description:'Community task for '+selectedUsers+' users',
+      currency:'XTR',
+      prices:[{label:name,amount:price}],
+      start_param:'task_'+Date.now(),
+      provider_token:'',
+      suggested_tip_amounts:[],
+      max_tip_amount:0,
+      is_flexible:false,
+      need_name:false,
+      need_phone_number:false,
+      need_email:false,
+      need_shipping_address:false,
+      send_email_to_provider:false,
+      send_phone_number_to_provider:false
+    };
+    window.Telegram.WebApp.openInvoice(payload,function(status){
+      if(status==='paid'){
+        addCommunityTask(name,link,selectedUsers);
+        ticketLeft+=15;
+        ticketEl.textContent=ticketLeft;
+        alert('✅ Paid! Task added & +15 Ticket awarded.');
+      }else if(status==='failed'){
+        alert('❌ Payment failed');
+      }else if(status==='cancelled'){
+        alert('❌ Payment cancelled');
+      }
+    });
+  }
+
+  /* popups */
+  function showNoTicketPopup(){
+    noTicketPopup.style.display='flex';
+  }
+  window.closeNoTicketPopup=()=>noTicketPopup.style.display='none';
+
+  /* add community task */
+  function addCommunityTask(name,link,required){
+    const card=document.createElement('div');
+    card.className='task-card';
+    card.innerHTML=`
+      <span class="icon">📄</span>
+      <span class="txt">${name} (+15🎟)</span>
+      <button class="btnJoin" onclick="joinCommunityTask('${name}','${link}')">Join</button>
+    `;
+    tasksOnly.appendChild(card);
+  }
+  window.joinCommunityTask=(name,link)=>{
+    window.open(link,'_blank');
+    const userId = document.getElementById('userId').textContent;
+    ticketLeft+=15; // تحديث محلي سريع
+    ticketEl.textContent=ticketLeft;
+    api({userId:userId,action:'joinCommunityTask',taskName:name}).catch(console.error);
+  };
+
+  /* pages */
+  function openTasks(){
+    document.getElementById('topBar').style.display='none';
+    document.getElementById('btnRow').style.display='none';
+    tasksOnly.style.display='flex';
+    backBtn.style.display='block';
+  }
+  function closeTasks(){
+    tasksOnly.style.display='none';
+    backBtn.style.display='none';
+    document.getElementById('topBar').style.display='flex';
+    document.getElementById('btnRow').style.display='flex';
+  }
+  function openAddTask(){
+    document.getElementById('topBar').style.display='none';
+    document.getElementById('btnRow').style.display='none';
+    addTaskPage.style.display='flex';
+    backBtn.style.display='block';
+  }
+  function closeAddTask(){
+    addTaskPage.style.display='none';
+    backBtn.style.display='none';
+    document.getElementById('topBar').style.display='flex';
+    document.getElementById('btnRow').style.display='flex';
+  }
+  function openSwap(){
+    document.getElementById('topBar').style.display='none';
+    document.getElementById('btnRow').style.display='none';
+    swapPage.style.display='flex';
+    backBtn.style.display='block';
+  }
+  function closeSwap(){
+    swapPage.style.display='none';
+    backBtn.style.display='none';
+    document.getElementById('topBar').style.display='flex';
+    document.getElementById('btnRow').style.display='flex';
+  }
+
+  /* game */
+  function startGame(){
+    timeLeft=30;timerEl.textContent=timeLeft;
+    document.getElementById('btnRow').style.display='none';
+    backBtn.style.display='none';
+    userCard.classList.add('hidden');
+    gameInterval=setInterval(()=>launchWave(),40);
+    timerInterval=setInterval(()=>{
+      timeLeft--;
+      timerEl.textContent=timeLeft;
+      if(timeLeft<=0)finishRound();
+    },1000);
+  }
+  function launchWave(){
+    for(let i=0;i<4;i++){
+      const f=document.createElement('span');
+      f.className='food';
+      f.textContent=foods[Math.floor(Math.random()*foods.length)];
+      f.style.left=(Math.random()*95)+'%';
+      f.style.top='-60px';
+      document.body.appendChild(f);
+      f.addEventListener('click',collect);
+      f.addEventListener('touchstart',collect,{passive:true});
+      setTimeout(()=>f.remove(),3000);
+    }
+  }
+  function collect(e){
+    e.stopPropagation();
+    const elem=e.currentTarget;
+    for(let i=0;i<8;i++){
+      const p=document.createElement('span');
+      p.className='pop';
+      const rect=elem.getBoundingClientRect();
+      p.style.left=(rect.left+rect.width/2)+'px';
+      p.style.top=(rect.top+rect.height/2)+'px';
+      p.style.transform=`rotate(${i*45}deg) translateX(30px)`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),400);
+    }
+    const snd=document.getElementById('popSound').cloneNode();
+    snd.volume=0.5;
+    snd.play();
+    totalScore++;
+    scoreEl.textContent=totalScore;
+    
+    const userId = document.getElementById('userId').textContent; 
+    api({userId: userId,action:'collect',emoji:elem.textContent,totalScore}).catch(console.error);
+    elem.remove();
+  }
+  function finishRound(){
+    clearInterval(gameInterval);
+    clearInterval(timerInterval);
+    document.querySelectorAll('.food').forEach(f=>f.remove());
+    document.querySelectorAll('.pop').forEach(p=>p.remove());
+    document.getElementById('btnRow').style.display='flex';
+    backBtn.style.display='none';
+    userCard.classList.remove('hidden');
+    closeTasks();closeAddTask();closeSwap();closeWithdraw();
+    
+    // عند انتهاء الجولة، نحدث الإحصائيات مرة أخيرة من الخادم لضمان التزامن
+    fillUserData();
+  }
+
+</script>
+</body>
+</html>
