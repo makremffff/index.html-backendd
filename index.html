@@ -1,4 +1,4 @@
-ط<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
@@ -64,6 +64,7 @@
 </head>
 <body>
 
+<!-- Top Bar -->
 <div id="topBar">
   <div>
     <div><span class="lbl">Time</span><span class="val" id="timer">30</span>s</div>
@@ -74,6 +75,7 @@
   <div><span class="lbl">Score</span><span class="val" id="score">0</span></div>
 </div>
 
+<!-- User Card -->
 <div id="userCard">
   <img id="userImg" src="" alt=""/>
   <div id="firstName"></div>
@@ -81,6 +83,7 @@
   <div id="userId"></div>
 </div>
 
+<!-- Bottom Buttons -->
 <div id="btnRow">
   <button id="tasksBtn" class="btn3d">TASKS</button>
   <button id="playBtn" class="btn3d">PLAY</button>
@@ -88,6 +91,7 @@
   <button id="swapBtn" class="btn3d">💱</button>
 </div>
 
+<!-- Withdraw Page -->
 <div id="withdrawPage" style="display:none">
   <div class="field-card">
     <label class="field-label">Binance UID (Numbers only)</label>
@@ -100,6 +104,7 @@
   <button id="confirmWithdrawBtn" class="submitBtn">Confirm Withdraw</button>
 </div>
 
+<!-- Swap Page -->
 <div id="swapPage" style="display:none">
   <div class="field-card">
     <label class="field-label">Swap Score to USDT</label>
@@ -109,6 +114,7 @@
   <button id="confirmSwapBtn" class="submitBtn">Confirm Swap</button>
 </div>
 
+<!-- Add Task Page -->
 <div id="addTaskPage" style="display:none">
   <div class="field-card"><label class="field-label">Task Name</label><input id="taskNameInput" class="field-input" placeholder="e.g. Join Channel" type="text"/></div>
   <div class="field-card"><label class="field-label">Channel / Bot Link</label><input id="taskLinkInput" class="field-input" placeholder="https://t.me/YourChannel" type="url"/></div>
@@ -122,15 +128,18 @@
   <button id="submitTaskBtn" class="submitBtn">Create Task</button>
 </div>
 
+<!-- Tasks Container -->
 <div id="tasksOnly" style="display:none">
   <div class="task-card"><span class="icon">📢</span><span class="txt">Join our channel (+10🎟)</span><button class="btnJoin" id="joinBtn">Join</button></div>
   <div class="task-card"><span class="icon">📺</span><span class="txt">Watch 300 ads (<span id="adsLeft">300</span> left)</span><button class="adBtn3d" id="watchAdBtn">+1🎟</button></div>
 </div>
 
+<!-- No-Ticket Popup -->
 <div id="noTicketPopup">
   <div>❌ You don't have enough tickets<br><button onclick="closeNoTicketPopup()" style="margin-top:12px;padding:6px 18px;font-size:16px;border:none;border-radius:8px;background:linear-gradient(145deg,#fff,#d1d1d1);color:#000;cursor:pointer;">Close</button></div>
 </div>
 
+<!-- Back Button -->
 <button id="backBtn">Back</button>
 
 <audio id="popSound" preload="auto" volume="100"></audio>
@@ -164,8 +173,7 @@
   const confirmSwapBtn=document.getElementById('confirmSwapBtn');
   const usdtPreview=document.getElementById('usdtPreview');
   const userCard=document.getElementById('userCard');
-  
-  // المتغيرات العالمية يتم تعيينها من دالة updateStats
+
   let totalScore=0;
   let ticketLeft=0;
   let adsLeft=300;
@@ -177,75 +185,29 @@
   ticketEl.textContent=ticketLeft;
 
   /* helper to call single endpoint */
-  function api(body){ 
-    // **هام:** استبدل 'https://index-html-backendd.vercel.app' بعنوان الـ Backend الفعلي الخاص بك
-    const BACKEND_URL = 'https://index-html-backendd.vercel.app'; 
+  function api(body){ return fetch('/api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
+
+  /* fill user data */
+  function fillUserData(){
+    if(!window.Telegram||!window.Telegram.WebApp){
+      document.getElementById('userImg').src='https://i.pravatar.cc/80?u=demo';
+      document.getElementById('firstName').textContent='Demo';
+      document.getElementById('username').textContent='@demo_user';
+      document.getElementById('userId').textContent='123456';
+      return;
+    }
     
-    return fetch(BACKEND_URL + '/api',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(body)
-    }); 
-  }
-
-  /* تحديث الإحصائيات المعروضة في الشريط العلوي */
-  function updateStats(stats) {
-      totalScore = stats.totalScore;
-      ticketLeft = stats.ticketLeft;
-      adsLeft = stats.adsLeft;
-      joined = stats.joined;
-      
-      scoreEl.textContent = totalScore;
-      ticketEl.textContent = ticketLeft;
-      usdtEl.textContent = parseFloat(stats.usdt).toFixed(6); 
-      adsLeftEl.textContent = adsLeft;
-      
-      // تحديث زر الانضمام بناءً على حالة joined
-      if (joined) {
-          joinBtn.textContent = '✅ Done';
-          joinBtn.disabled = true;
-      } else {
-          joinBtn.textContent = 'Join';
-          joinBtn.disabled = false;
-      }
-  }
-
-  /* fill user data and fetch stats from backend */
-  async function fillUserData(){
-      // افتراضات بيانات المستخدم إذا لم يكن WebApp متاحاً (للاختبار)
-      let u = {
-          id: '1', // ID افتراضي للاختبار
-          first_name: 'Demo',
-          username: 'demo_user',
-          photo_url: 'https://i.pravatar.cc/80?u=demo'
-      };
-      
-      if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe.user){
-          u = window.Telegram.WebApp.initDataUnsafe.user;
-      }
-      
-      // عرض بيانات المستخدم الأساسية
-      document.getElementById('userImg').src=u.photo_url||'https://i.pravatar.cc/80?u='+u.id;
-      document.getElementById('firstName').textContent=u.first_name||'';
-      document.getElementById('username').textContent=u.username?'@'+u.username:'No username';
-      document.getElementById('userId').textContent=u.id||'';
-
-      try {
-          // **الآن نقوم بجلب إحصائيات اللعبة من الخادم عبر API**
-          const res = await api({userId: u.id, action: 'getStats'});
-          if (!res.ok) {
-              const errorText = await res.text();
-              throw new Error(`Server returned ${res.status}: ${errorText}`);
-          }
-          
-          const data = await res.json();
-          // تحديث جميع الأرقام باستخدام دالة updateStats
-          updateStats(data);
-          
-      } catch(err) {
-          console.error('❌ Failed to fetch user stats on load:', err);
-          alert('❌ Failed to connect to server or load stats. Please refresh.');
-      }
+    const u=window.Telegram.WebApp.initDataUnsafe.user;
+    if(!u){
+      alert('User object not found');
+      return;
+    }
+    
+    // استدعاء بيانات المستخدم بشكل صحيح
+    document.getElementById('userImg').src=u.photo_url||'https://i.pravatar.cc/80?u='+u.id;
+    document.getElementById('firstName').textContent=u.first_name||'';
+    document.getElementById('username').textContent=u.username?'@'+u.username:'No username';
+    document.getElementById('userId').textContent=u.id||'';
   }
   
   fillUserData();
@@ -264,82 +226,42 @@
   document.getElementById('withdrawBtn').addEventListener('click',()=>openWithdraw());
 
   /* actions */
-  playBtn.addEventListener('click',async ()=>{
-      if(ticketLeft<=0){showNoTicketPopup();return;}
-      
-      const userId = document.getElementById('userId').textContent;
-      try {
-          // نرسل ticketLeft-1 لأن الواجهة الأمامية تعرف أن التذكرة ستنقص
-          const res = await api({userId: userId, action: 'play', ticketLeft: ticketLeft - 1});
-          if (!res.ok) {
-              const errData = await res.json().catch(() => ({ error: 'Play request failed' }));
-              throw new Error(errData.error || 'Play request failed');
-          }
-          
-          const data = await res.json();
-          // تحديث التذاكر من رد الخادم
-          updateStats({
-              totalScore: totalScore, 
-              ticketLeft: data.newTicketCount, 
-              usdt: usdtEl.textContent,
-              adsLeft: adsLeft, 
-              joined: joined 
-          });
-          
-          startGame(); // ابدأ اللعبة فقط بعد تأكيد الخصم من الخادم
-      } catch(err) {
-          console.error(err);
-          alert('❌ Failed to start game, please try again. Error: ' + err.message);
-      }
+  playBtn.addEventListener('click',()=>{
+    if(ticketLeft<=0){showNoTicketPopup();return;}
+    ticketLeft--;ticketEl.textContent=ticketLeft;
+    api({userId:1,action:'play'}).catch(console.error);
+    startGame();
   });
 
   tasksBtn.addEventListener('click',()=>{
-    api({userId:document.getElementById('userId').textContent,action:'openTasks'}).catch(console.error);
+    api({userId:1,action:'openTasks'}).catch(console.error);
     openTasks();
   });
 
   addTaskBtn.addEventListener('click',()=>{
-    api({userId:document.getElementById('userId').textContent,action:'openAddTask'}).catch(console.error);
+    api({userId:1,action:'openAddTask'}).catch(console.error);
     openAddTask();
   });
 
   swapBtn.addEventListener('click',()=>{
-    api({userId:document.getElementById('userId').textContent,action:'openSwap'}).catch(console.error);
+    api({userId:1,action:'openSwap'}).catch(console.error);
     openSwap();
   });
 
-  confirmSwapBtn.addEventListener('click',async ()=>{
-      const amount=parseInt(swapInput.value);
-      const currentScore = parseInt(scoreEl.textContent);
-      const userId = document.getElementById('userId').textContent;
-      
-      if(!amount||amount<=0||amount>currentScore){alert('Invalid or insufficient score');return;}
-      if(amount<200000){alert('Minimum swap is 200,000 score');return;}
-      
-      try {
-          const res = await api({userId: userId, action:'swap', amount: amount});
-          if (!res.ok) {
-              const errData = await res.json().catch(() => ({ error: 'Swap request failed' }));
-              throw new Error(errData.error || 'Swap request failed');
-          }
-          
-          const data = await res.json();
-          // تحديث الإحصائيات من رد الخادم
-          updateStats({
-              totalScore: data.newScore, 
-              ticketLeft: ticketLeft, 
-              usdt: data.newUsdt,
-              adsLeft: adsLeft, 
-              joined: joined 
-          });
-          
-          alert(`✅ Swapped ${amount} score to ${data.newUsdt} USDT`);
-          closeSwap();
-          
-      } catch(err) {
-          console.error('Swap Error:', err);
-          alert('❌ Swap failed: ' + err.message);
-      }
+  confirmSwapBtn.addEventListener('click',()=>{
+    const amount=parseInt(swapInput.value);
+    if(!amount||amount<=0||amount>totalScore){alert('Invalid or insufficient score');return;}
+    if(amount<200000){alert('Minimum swap is 200,000 score');return;}
+    api({userId:1,action:'swap',amount})
+      .then(res=>{if(!res.ok)throw new Error('Server returned '+res.status);})
+      .then(()=>{
+        totalScore-=amount;
+        scoreEl.textContent=totalScore;
+        usdtEl.textContent=(parseFloat(usdtEl.textContent)+amount*0.01/200000).toFixed(6);
+        alert(`✅ Swapped ${amount} score`);
+        closeSwap();
+      })
+      .catch(err=>{console.error(err);alert('❌ Swap failed, please try again');});
   });
 
   swapInput.addEventListener('input',()=>{
@@ -356,75 +278,30 @@
     createTelegramInvoice(name,link,price);
   });
 
-  joinBtn.addEventListener('click',async ()=>{
-      if(joined)return;
-      
-      const userId = document.getElementById('userId').textContent;
-      try {
-          const res = await api({userId: userId, action:'joinChannel', ticketLeft: ticketLeft + 10});
-          if (!res.ok) {
-              const errData = await res.json().catch(() => ({ error: 'Join Channel request failed' }));
-              throw new Error(errData.error || 'Join Channel request failed');
-          }
-          
-          const data = await res.json();
-           updateStats({
-              totalScore: totalScore, 
-              ticketLeft: data.tickets, 
-              usdt: usdtEl.textContent,
-              adsLeft: adsLeft, 
-              joined: true
-          });
-          
-      } catch(err) {
-          console.error('Join Channel Error:', err);
-          alert('❌ Failed to join channel: ' + err.message);
-      }
+  joinBtn.addEventListener('click',()=>{
+    if(joined)return;
+    joined=true;ticketLeft+=10;ticketEl.textContent=ticketLeft;
+    joinBtn.textContent='✅ Done';joinBtn.disabled=true;
+    api({userId:1,action:'joinChannel',ticketLeft}).catch(console.error);
   });
 
-  watchAdBtn.addEventListener('click',async ()=>{
-      if(adsLeft<=0||adBlock)return;
-      adBlock=true;
-      
-      const userId = document.getElementById('userId').textContent;
-      try {
-           // محاكاة مشاهدة الإعلان
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const res = await api({userId: userId, action:'watchAd', ticketLeft: ticketLeft + 1, adsLeft: adsLeft - 1});
-          if (!res.ok) {
-              const errData = await res.json().catch(() => ({ error: 'Watch Ad request failed' }));
-              throw new Error(errData.error || 'Watch Ad request failed');
-          }
-          
-          const data = await res.json();
-          updateStats({
-              totalScore: totalScore, 
-              ticketLeft: data.tickets, 
-              usdt: usdtEl.textContent,
-              adsLeft: data.adsLeft, 
-              joined: joined
-          });
-
-          if(data.adsLeft<=0){
-              watchAdBtn.textContent='⏳ 15h wait';watchAdBtn.disabled=true;
-              // هذا التوقيت قد لا يتطابق مع منطق الـ Backend لإعادة التعيين
-              setTimeout(()=>{
-                  // هذا التحديث يجب أن يحدث في الـ Backend أيضاً
-                  adsLeft=300;adsLeftEl.textContent=adsLeft;watchAdBtn.textContent='+1🎟';watchAdBtn.disabled=false;
-              },54000000);
-          }
-          adBlock=false;
-          
-      } catch(err) {
-          console.error('Watch Ad Error:', err);
-          alert('❌ Failed to watch ad: ' + err.message);
-          adBlock=false; 
+  watchAdBtn.addEventListener('click',()=>{
+    if(adsLeft<=0||adBlock)return;
+    adBlock=true;
+    setTimeout(()=>{
+      ticketLeft++;ticketEl.textContent=ticketLeft;
+      adsLeft--;adsLeftEl.textContent=adsLeft;
+      if(adsLeft<=0){
+        watchAdBtn.textContent='⏳ 15h wait';watchAdBtn.disabled=true;
+        setTimeout(()=>{adsLeft=300;adsLeftEl.textContent=adsLeft;watchAdBtn.textContent='+1🎟';watchAdBtn.disabled=false;},54000000);
       }
+      adBlock=false;
+      api({userId:1,action:'watchAd',ticketLeft,adsLeft}).catch(console.error);
+    },1000);
   });
 
   backBtn.addEventListener('click',()=>{
-    api({userId:document.getElementById('userId').textContent,action:'back'}).catch(console.error);
+    api({userId:1,action:'back'}).catch(console.error);
     closeTasks();closeAddTask();closeSwap();closeWithdraw();
   });
 
@@ -435,7 +312,7 @@
   const confirmWithdrawBtn=document.getElementById('confirmWithdrawBtn');
 
   function openWithdraw(){
-    api({userId:document.getElementById('userId').textContent,action:'openWithdraw'}).catch(console.error);
+    api({userId:1,action:'openWithdraw'}).catch(console.error);
     document.getElementById('topBar').style.display='none';
     document.getElementById('btnRow').style.display='none';
     withdrawPage.style.display='flex';
@@ -449,42 +326,20 @@
     document.getElementById('btnRow').style.display='flex';
   }
   
-  confirmWithdrawBtn.addEventListener('click',async ()=>{
-      const binance=binanceInput.value.trim();
-      const amount=parseFloat(withdrawAmount.value);
-      const currentUsdt=parseFloat(usdtEl.textContent);
-      const userId = document.getElementById('userId').textContent;
-      
-      if(!binance){alert('Please enter your Binance UID');return;}
-      if(!amount||amount<0.03||amount>currentUsdt){
-        alert('Minimum withdraw is 0.03 USDT or insufficient balance');
-        return;
-      }
-      
-      try {
-          const res = await api({userId: userId, action: 'withdraw', binance: binance, withdrawAmount: amount});
-          if (!res.ok) {
-               const errData = await res.json().catch(() => ({ error: 'Withdraw request failed' }));
-               throw new Error(errData.error || 'Withdraw request failed');
-          }
-          
-          const data = await res.json();
-          // تحديث رصيد USDT بعد السحب من رد الخادم
-          updateStats({
-              totalScore: totalScore, 
-              ticketLeft: ticketLeft, 
-              usdt: data.remainingUsdt,
-              adsLeft: adsLeft, 
-              joined: joined 
-          });
-          
-          alert('✅ Withdraw request sent! Remaining USDT: ' + data.remainingUsdt);
-          closeWithdraw();
-          
-      } catch(err) {
-          console.error('Withdraw Error:', err);
-          alert('❌ Withdraw failed: ' + err.message);
-      }
+  confirmWithdrawBtn.addEventListener('click',()=>{
+    const binance=binanceInput.value.trim();
+    const amount=parseFloat(withdrawAmount.value);
+    
+    if(!binance){alert('Please enter your Binance UID');return;}
+    if(!amount||amount<0.03||amount>parseFloat(usdtEl.textContent)){
+      alert('Minimum withdraw is 0.03 USDT or insufficient balance');
+      return;
+    }
+    
+    // هنا يمكنك استدعاء api({action:'withdraw',binance,amount})
+    console.log('Withdraw request:',{binance,amount});
+    alert('✅ Withdraw request sent!');
+    closeWithdraw();
   });
 
   /* Telegram Invoice */
@@ -540,10 +395,9 @@
   }
   window.joinCommunityTask=(name,link)=>{
     window.open(link,'_blank');
-    const userId = document.getElementById('userId').textContent;
-    ticketLeft+=15; // تحديث محلي سريع
+    ticketLeft+=15;
     ticketEl.textContent=ticketLeft;
-    api({userId:userId,action:'joinCommunityTask',taskName:name}).catch(console.error);
+    api({userId:1,action:'joinCommunityTask',taskName:name}).catch(console.error);
   };
 
   /* pages */
@@ -628,9 +482,7 @@
     snd.play();
     totalScore++;
     scoreEl.textContent=totalScore;
-    
-    const userId = document.getElementById('userId').textContent; 
-    api({userId: userId,action:'collect',emoji:elem.textContent,totalScore}).catch(console.error);
+    api({userId:1,action:'collect',emoji:elem.textContent,totalScore}).catch(console.error);
     elem.remove();
   }
   function finishRound(){
@@ -642,9 +494,6 @@
     backBtn.style.display='none';
     userCard.classList.remove('hidden');
     closeTasks();closeAddTask();closeSwap();closeWithdraw();
-    
-    // عند انتهاء الجولة، نحدث الإحصائيات مرة أخيرة من الخادم لضمان التزامن
-    fillUserData();
   }
 
 </script>
